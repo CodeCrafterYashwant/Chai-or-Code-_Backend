@@ -2,6 +2,7 @@
   "name": "chai-or-code-_backend",
   "version": "1.0.0",
   "description": "",
+  "types": "module",
   "homepage": "https://github.com/CodeCrafterYashwant/Chai-or-Code-_Backend#readme",
   "bugs": {
     "url": "https://github.com/CodeCrafterYashwant/Chai-or-Code-_Backend/issues"
@@ -15,6 +16,9 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev":"nodemon src/index.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }
