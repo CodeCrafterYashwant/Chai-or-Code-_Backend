@@ -2,7 +2,6 @@
   "name": "chai-or-code-_backend",
   "version": "1.0.0",
   "description": "",
-  "types": "module",
   "homepage": "https://github.com/CodeCrafterYashwant/Chai-or-Code-_Backend#readme",
   "bugs": {
     "url": "https://github.com/CodeCrafterYashwant/Chai-or-Code-_Backend/issues"
@@ -13,7 +12,7 @@
   },
   "license": "ISC",
   "author": "",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js"
@@ -21,5 +20,11 @@
   "devDependencies": {
     "nodemon": "^3.1.14",
     "prettier": "^3.8.1"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "mongoose": "^9.4.1",
+    "package.json": "^0.0.0"
   }
 }
