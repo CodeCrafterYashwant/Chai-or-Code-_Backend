@@ -14,9 +14,11 @@ app.use(express.json({limit:process.env.LIMIT}));
 app.use(express.urlencoded({extended:true,limit:process.env.LIMIT}))
 app.use(express.static("public"))
 app.use(cookieParser())
+app.use(morgan('tiny'))
 
 //routes import
 import userRouter from './routes/user.routes.js'
+import morgan from "morgan";
 
 
 //routes declaration
