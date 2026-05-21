@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import {uploadOnCloudinary} from "../utils/cloudinary.js";
+import {deleteFromCloudinaryByUrl, uploadOnCloudinary} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -159,7 +159,7 @@ const logoutUser = asyncHandler(async (req,res) =>{
 });
 
 const refreshAccessToken = asyncHandler(async (req,res) => {
-    const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken;
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
     if(!incomingRefreshToken){
         throw new ApiError(401,"Unauthorized Request")
     }
@@ -178,7 +178,7 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
             httpOnly:true,
             secure:true
         }
-        const {accessToken,newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
+        const {accessToken,refreshToken:newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
         return res
         .status(200)
         .cookie("accessToken",accessToken,option)
@@ -186,7 +186,9 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
         .json(
             new ApiResponse(
                 200,
-                {accessToken,refreshToken : newRefreshToken},
+                {
+                    accessToken,
+                    refreshToken : newRefreshToken},
                 "Access token refreshed"
             )
         )   
@@ -204,8 +206,14 @@ const changeCurrentPassword = asyncHandler(async (req,res) =>{
     }
     user.password = newPassword
     await user.save({validateBeforeSave:false})
+    const option = {
+        httpOnly:true,
+        secure:true
+    }
     return res
     .status(200)
+    .clearCookie("accessToken",option)
+    .clearCookie("refreshToken",option)    
     .json(
         new ApiResponse(200,{},"Password changed successfully")
     )
@@ -225,8 +233,15 @@ const updateAccountDetails = asyncHandler(async (req,res) =>{
     if(!fullName || !email){
         throw new ApiError(400,"All fields are required")
     }
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
+    const user = await User.findById(req.user?._id)
+    if(!user){
+        throw new ApiError(404,"User not exist")
+    }
+    if(user.email === email && user.fullName === fullName){
+        throw new ApiError(400,"No changes detected")
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+        user._id,
         {
             $set:{
                 fullName,
@@ -238,7 +253,7 @@ const updateAccountDetails = asyncHandler(async (req,res) =>{
     return res
     .status(200)
     .json(
-        new ApiResponse(200,user,"Accound details updated successfully")
+        new ApiResponse(200,updatedUser,"Accound details updated successfully")
     )
 });
 
@@ -251,7 +266,8 @@ const updateUserAvatar = asyncHandler(async (req,res) =>{
     if (!avatar.url) {
         throw new ApiError(400,"Error while uploading on avatar")
     }
-    const user = await User.findByIdAndUpdate(
+    const user = await User.findById(req.user?._id)
+    const updatedUser = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set:{
@@ -260,14 +276,25 @@ const updateUserAvatar = asyncHandler(async (req,res) =>{
         },
         {new:true}
     ).select("-password")
+    const response = await deleteFromCloudinaryByUrl(user.avatar)
+    if (response.result === "ok") {
+        console.log("Avatar deleted from cloudinary")
+    }
+    else if(response.result === "not found"){
+        console.log("Avatar was not founded on cloudinary")
+    }else{
+        console.error("Error while deleting Avatar from cloudinary")
+    }
     return res
     .status(200)
     .json(
-        new ApiResponse(200,user,"Avatar updated successfully")
+        new ApiResponse(200,updatedUser,"Avatar updated successfully")
     )
 
 
 });
+
+
 const updateUserCoverImage = asyncHandler(async (req,res) =>{
     const coverImageLocalPath = req.file?.path
     if (!coverImageLocalPath) {
@@ -277,7 +304,8 @@ const updateUserCoverImage = asyncHandler(async (req,res) =>{
     if (!coverImage.url) {
         throw new ApiError(400,"Error while uploading on avatar")
     }
-    const user = await User.findByIdAndUpdate(
+    const user = await User.findById(req.user?._id)
+    const updatedUser = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set:{
@@ -286,10 +314,19 @@ const updateUserCoverImage = asyncHandler(async (req,res) =>{
         },
         {new:true}
     ).select("-password")
+    const response = await deleteFromCloudinaryByUrl(user.coverImage)
+    if (response.result === "ok") {
+        console.log("CoverImage deleted from cloudinary")
+    }
+    else if(response.result === "not found"){
+        console.log("coverImage was not founded on cloudinary")
+    }else{
+        console.error("Error while deleting coverImage from cloudinary")
+    }
     return res
     .status(200)
     .json(
-        new ApiResponse(200,user,"Cover image updated successfully")
+        new ApiResponse(200,updatedUser,"Cover image updated successfully")
     )
 
 

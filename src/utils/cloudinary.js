@@ -21,8 +21,27 @@ const uploadOnCloudinary = async (localFilePath) => {
         fs.unlinkSync(localFilePath) //remove the locally saved temparary file as the upload operation get failed
         return null;
     }
+};
+const deleteFromCloudinaryByUrl = async (secureUrl) => {
+    try {
+        if(!secureUrl) return  null;
+        const regex = /\/upload\/(?:v\d+\/)?([^\.]+)/;
+        const match = secureUrl.match(regex);
+        if (!match || !match[1]) {
+            console.error("Could not parse Cloudinary Public ID from URL:", secureUrl);
+            return null;
+        }
+
+        const publicId = match[1]; // e.g., "avatars/user_12345"
+
+        // 2. Destroy the file using the extracted ID
+        const response = await cloudinary.uploader.destroy(publicId);
+        return response
+    } catch (error) {
+        console.error("Cloudinary assests destruction failed",error);
+        return null;
+    }
 }
 
 
-
-export {uploadOnCloudinary}
+export {uploadOnCloudinary,deleteFromCloudinaryByUrl}
