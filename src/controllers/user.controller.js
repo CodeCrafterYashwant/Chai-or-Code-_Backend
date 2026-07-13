@@ -163,9 +163,6 @@ const logoutUser = asyncHandler(async (req, res) => {
             $unset: {
                 refreshToken: 1,
             },
-        },
-        {
-            new: true,
         }
     );
     const option = {
@@ -307,7 +304,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
                 avatar: avatar.url,
             },
         },
-        { new: true }
+        { returnDocument:'after' }
     ).select("-password");
     const response = await deleteFromCloudinaryByUrl(user.avatar);
     if (response.result === "ok") {
@@ -339,7 +336,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
                 coverImage: coverImage.url,
             },
         },
-        { new: true }
+        { returnDocument:'after' }
     ).select("-password");
     const response = await deleteFromCloudinaryByUrl(user.coverImage);
     if (response.result === "ok") {
