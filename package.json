@@ -1,38 +1,39 @@
 {
-  "name": "chai-or-code-_backend",
-  "version": "1.0.0",
-  "description": "",
-  "homepage": "https://github.com/CodeCrafterYashwant/Chai-or-Code-_Backend#readme",
-  "bugs": {
-    "url": "https://github.com/CodeCrafterYashwant/Chai-or-Code-_Backend/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/CodeCrafterYashwant/Chai-or-Code-_Backend.git"
-  },
-  "license": "ISC",
-  "author": "",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "dev": "nodemon -r dotenv/config src/index.js"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.14",
-    "prettier": "^3.8.1"
-  },
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "cloudinary": "^2.10.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.6.1",
-    "mongoose-aggregate-paginate-v2": "^1.1.4",
-    "morgan": "^1.10.1",
-    "multer": "^2.1.1",
-    "package.json": "^0.0.0"
-  }
+    "name": "chai-or-code-_backend",
+    "version": "1.0.0",
+    "description": "",
+    "homepage": "https://github.com/CodeCrafterYashwant/Chai-or-Code-_Backend#readme",
+    "bugs": {
+        "url": "https://github.com/CodeCrafterYashwant/Chai-or-Code-_Backend/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/CodeCrafterYashwant/Chai-or-Code-_Backend.git"
+    },
+    "license": "ISC",
+    "author": "",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "dev": "nodemon -r dotenv/config src/index.js"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.14",
+        "prettier": "^3.8.1"
+    },
+    "dependencies": {
+        "bcrypt": "^6.0.0",
+        "cloudinary": "^2.10.0",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.6",
+        "dotenv": "^17.4.2",
+        "express": "^5.2.1",
+        "jsonwebtoken": "^9.0.3",
+        "mongoose": "^9.6.1",
+        "mongoose-aggregate-paginate-v2": "^1.1.4",
+        "morgan": "^1.10.1",
+        "multer": "^2.1.1",
+        "multer-storage-cloudinary": "^4.0.0",
+        "package.json": "^0.0.0"
+    }
 }
