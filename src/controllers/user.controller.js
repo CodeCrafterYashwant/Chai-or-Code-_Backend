@@ -261,7 +261,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     if (!fullName || !email) {
         throw new ApiError(400, "All fields are required");
     }
-    const user = await User.findById(req.user?._id);
+  
+    const user = req.user;
     if (!user) {
         throw new ApiError(404, "User not exist");
     }
@@ -276,7 +277,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
                 email,
             },
         },
-        { new: true }
+        { returnDocument:'after' }
     ).select("-password");
     return res
         .status(200)
