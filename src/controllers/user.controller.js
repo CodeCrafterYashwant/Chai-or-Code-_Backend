@@ -485,45 +485,6 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         );
 });
 
-const channelSubscribedbyUser = asyncHandler(async (req, res) => {
-    const user = req.user?._id;
-    const subscribedChannels = await Subscription.aggregate([
-        {
-            $match: {
-                subscriber: new mongoose.Types.ObjectId(user),
-            },
-        },
-        {
-            $lookup: {
-                from: "users",
-                localField: "channel",
-                foreignField: "_id",
-                as: "channels_Info",
-            },
-        },
-        {
-            $unwind: "$channels_Info",
-        },
-        {
-            $project: {
-                "channels_Info._id": 1,
-                "channels_Info.username": 1,
-                "channels_Info.fullName": 1,
-                "channels_Info.avatar": 1,
-                "channels_Info.coverImage": 1,
-            },
-        },
-    ]);
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                subscribedChannels,
-                "Channels subscribed by used are featched."
-            )
-        );
-});
 
 export {
     registerUser,
@@ -536,6 +497,5 @@ export {
     updateUserAvatar,
     updateUserCoverImage,
     getUserChannelProfile,
-    getWatchHistory,
-    channelSubscribedbyUser,
+    getWatchHistory
 };
