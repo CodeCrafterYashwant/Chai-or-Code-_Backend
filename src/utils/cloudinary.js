@@ -43,23 +43,30 @@ const uploadOnCloudinarybyBuffer = (buffer) => {
 const deleteFromCloudinaryByUrl = async (secureUrl) => {
     try {
         if (!secureUrl) return null;
-        const regex = /\/upload\/(?:v\d+\/)?([^\.]+)/;
+        
+        // 1. Updated regex to capture BOTH the resource_type and the public_id
+        const regex = /\/(image|video|raw)\/upload\/(?:v\d+\/)?([^\.]+)/;
         const match = secureUrl.match(regex);
-        if (!match || !match[1]) {
+        
+        if (!match || !match[1] || !match[2]) {
             console.error(
-                "Could not parse Cloudinary Public ID from URL:",
+                "Could not parse Cloudinary resource type or Public ID from URL:",
                 secureUrl
             );
             return null;
         }
 
-        const publicId = match[1]; // e.g., "avatars/user_12345"
+        const resourceType = match[1]; // e.g., "image" or "video"
+        const publicId = match[2];     // e.g., "epkzonztacciuw7lzf3r"
 
-        // 2. Destroy the file using the extracted ID
-        const response = await cloudinary.uploader.destroy(publicId);
+        // 2. Destroy the file using the extracted ID AND the resource_type
+        const response = await cloudinary.uploader.destroy(publicId, {
+            resource_type: resourceType
+        });
+        
         return response;
     } catch (error) {
-        console.error("Cloudinary assests destruction failed", error);
+        console.error("Cloudinary asset destruction failed", error);
         return null;
     }
 };
