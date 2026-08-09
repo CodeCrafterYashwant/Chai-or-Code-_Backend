@@ -1,4 +1,4 @@
-import mongoose, {isValidObjectId} from "mongoose"
+import mongoose, {isValidObjectId, Types} from "mongoose"
 import {Video} from "../models/video.model.js"
 import {User} from "../models/user.model.js"
 import {ApiError} from "../utils/ApiError.js"
@@ -6,12 +6,90 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import {deleteFromCloudinaryByUrl, uploadOnCloudinary} from "../utils/cloudinary.js"
 
-
+ 
 const getAllVideos = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
-    //TODO: get all videos based on query, sort, pagination
+    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+
+    // 1. Build the $match stage conditions
+    const pipeline = [];
+    const matchConditions = {};
+
+    // Filter by text search query (title or description)
+    if (query) {
+        matchConditions.$or = [
+            { title: { $regex: query, $options: "i" } },
+            { description: { $regex: query, $options: "i" } }
+        ];
+    }
+
+    // Filter by a specific owner/user if provided
+    if (userId) {
+        matchConditions.owner = new Types.ObjectId(userId);
+    }
+
+    // Push the match stage if any conditions exist
+    if (Object.keys(matchConditions).length > 0) {
+        pipeline.push({ $match: matchConditions });
+    }
+
+    // 2. Build the $sort stage
+    const sortCriteria = {};
+    const sortOrder = sortType === "asc" ? 1 : -1;
+    sortCriteria[sortBy] = sortOrder;
     
-})
+    pipeline.push({ $sort: sortCriteria });
+
+    // 3. Pagination stages ($skip and $limit)
+    const pageNumber = Math.max(1, parseInt(page, 10));
+    const pageSize = Math.max(1, parseInt(limit, 10));
+    const skipCount = (pageNumber - 1) * pageSize;
+
+    pipeline.push(
+        { $skip: skipCount },
+        { $limit: pageSize }
+    );
+
+    // 4. Lookup video owner details from the users collection
+    pipeline.push(
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner"
+            }
+        },
+        {
+            $unwind: "$owner"
+        },
+        // 5. Clean up the final projected output
+        {
+            $project: {
+                title: 1,
+                description: 1,
+                videoFile: 1,
+                thumbnail: 1,
+                duration: 1,
+                views: 1,
+                createdAt: 1,
+                "owner._id": 1,
+                "owner.username": 1,
+                "owner.fullName": 1,
+                "owner.avatar": 1
+            }
+        }
+    );
+
+    // Execute the aggregation pipeline
+    const videos = await Video.aggregate(pipeline);
+
+    if(videos.length === 0){
+        throw new ApiError(404,'No Videos Found.')
+    }
+    return res
+        .status(200)
+        .json(new ApiResponse(200, videos, "Videos fetched successfully"));
+});
 
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description} = req.body
