@@ -52,6 +52,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
     // 4. Lookup video owner details from the users collection
     pipeline.push(
         {
+            $match: { 
+                isPublished: true
+            } 
+        },
+        {
             $lookup: {
                 from: "users",
                 localField: "owner",
@@ -124,19 +129,35 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-     
+    const user = req.user;     
     if(!videoId){
         throw new ApiError(400,'Video Id is required.')
     }
-    const video = await Video.findById(videoId)
+    const video = await Video.findByIdAndUpdate(
+        videoId,
+        { $inc: { views: 1 } },
+        { new: true }
+    ).populate("owner", "username fullName avatar");
     if(!video){
-        throw new ApiError(400,'Video not Found.')
-
+        throw new ApiError(404,'Video not Found.')
+    }
+    if(video.isPublished===false){
+        throw new ApiError(404,'Video is not Found or not published yet.')
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+        user?._id,{
+            $addToSet:{
+                watchHistory:videoId
+            }
+        },
+        {new:true}
+    );
+    if(!updatedUser){
+        throw new ApiError(400,'Error while updating watch history.')
     }
     return res.status(200).json(
         new ApiResponse(200,video,'Video Featched Successfully.')
     )
-    
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
@@ -147,6 +168,13 @@ const updateVideo = asyncHandler(async (req, res) => {
     const video = await Video.findById(videoId)
     if (!video) {
         throw new ApiError(400,'Video not found or Invalid Video Id.')
+    }
+   
+    if(video.owner.toString() !== req.user?._id.toString()){
+        throw new ApiError(403,'You are not the owner of this video.')
+    }
+    if(video.isPublished === false){
+        throw new ApiError(403,'Video is not published yet. You can only update published videos.')
     }
     const {title,description} = req.body || {};
     const thumbnail = req.file;
@@ -191,17 +219,20 @@ const deleteVideo = asyncHandler(async (req, res) => {
     if(!videoId){
         throw new ApiError(400,'Video Id is required.')
     }
+    const videoOwner = await Video.findById(videoId).select("owner")
+
+    if(videoOwner.owner.toString() !== req.user?._id.toString()){
+        throw new ApiError(403,'You are not the owner of this video.')
+    }
     const video = await Video.findByIdAndDelete(videoId)
     if (!video) {
-        throw new ApiError(400,"Video not Found.")
+        throw new ApiError(404,"Video not Found.")
     }
     const deleteImage = await deleteFromCloudinaryByUrl(video?.videoFile)
     const deleteVideo = await deleteFromCloudinaryByUrl(video?.thumbnail)
     if(deleteImage && deleteImage.result === 'ok' && deleteVideo && deleteVideo.result ==='ok'){
         console.log('Video related files deleted from Cloudinary.');
     }
-
-    
     return res.status(200).json(
         new ApiResponse(200,{},'Video Deleted Successfully.')
     )
@@ -215,6 +246,9 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     const video  = await Video.findById(videoId)
     if(!video){
         throw new ApiError(400,'Video not Found.')
+    }
+    if(video.owner.toString() !== req.user?._id.toString()){
+        throw new ApiError(403,'You are not the owner of this video.')
     }
     if (video.isPublished === true) {
         video.isPublished = false

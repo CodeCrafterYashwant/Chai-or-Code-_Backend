@@ -471,6 +471,21 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                 ],
             },
         },
+        {
+            $unwind: "$watchHistory",
+            
+        },
+        {
+            $project: {
+            username: 1,
+            email: 1,
+            fullName: 1,
+            avatar: 1,
+            coverImage: 1,
+            watchHistory: 1,
+            createdAt: 1
+            }
+        }, 
     ]);
     return res
         .status(200)
