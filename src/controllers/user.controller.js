@@ -157,14 +157,11 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $unset: {
-                refreshToken: 1,
-            },
-        }
-    );
+    await User.findByIdAndUpdate(req.user._id, {
+        $unset: {
+            refreshToken: 1,
+        },
+    });
     const option = {
         httpOnly: true,
         secure: true,
@@ -228,16 +225,16 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     }
     user.password = newPassword;
     await user.save({ validateBeforeSave: false });
-    await User.findByIdAndUpdate(user._id,{
-        $unset:{
-            refreshToken:1,
+    await User.findByIdAndUpdate(user._id, {
+        $unset: {
+            refreshToken: 1,
         },
-    })
+    });
     const option = {
         httpOnly: true,
         secure: true,
     };
-    
+
     return res
         .status(200)
         .clearCookie("accessToken", option)
@@ -258,7 +255,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     if (!fullName || !email) {
         throw new ApiError(400, "All fields are required");
     }
-  
+
     const user = req.user;
     if (!user) {
         throw new ApiError(404, "User not exist");
@@ -274,7 +271,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
                 email,
             },
         },
-        { returnDocument:'after' }
+        { returnDocument: "after" }
     ).select("-password");
     return res
         .status(200)
@@ -304,7 +301,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
                 avatar: avatar.url,
             },
         },
-        { returnDocument:'after' }
+        { returnDocument: "after" }
     ).select("-password");
     const response = await deleteFromCloudinaryByUrl(user.avatar);
     if (response.result === "ok") {
@@ -336,7 +333,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
                 coverImage: coverImage.url,
             },
         },
-        { returnDocument:'after' }
+        { returnDocument: "after" }
     ).select("-password");
     const response = await deleteFromCloudinaryByUrl(user.coverImage);
     if (response.result === "ok") {
@@ -415,7 +412,6 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         },
     ]);
 
-
     if (!channel?.length) {
         throw new ApiError(404, "Channel does not exists");
     }
@@ -473,19 +469,18 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         },
         {
             $unwind: "$watchHistory",
-            
         },
         {
             $project: {
-            username: 1,
-            email: 1,
-            fullName: 1,
-            avatar: 1,
-            coverImage: 1,
-            watchHistory: 1,
-            createdAt: 1
-            }
-        }, 
+                username: 1,
+                email: 1,
+                fullName: 1,
+                avatar: 1,
+                coverImage: 1,
+                watchHistory: 1,
+                createdAt: 1,
+            },
+        },
     ]);
     return res
         .status(200)
@@ -498,7 +493,6 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         );
 });
 
-
 export {
     registerUser,
     loginUser,
@@ -510,5 +504,5 @@ export {
     updateUserAvatar,
     updateUserCoverImage,
     getUserChannelProfile,
-    getWatchHistory
+    getWatchHistory,
 };
