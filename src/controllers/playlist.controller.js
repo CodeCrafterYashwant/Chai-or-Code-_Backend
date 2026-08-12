@@ -36,13 +36,10 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     if (!isValidObjectId(userId)) {
         throw new ApiError(400, "Invalid User ID");
     }
-    if (userId.toString() !== req.user?._id.toString()) {
-        throw new ApiError(403, "You can't see other's playlist.");
-    }
     const playlist = await Playlist.find({
-        owner: new Types.ObjectId(userId),
+        owner: new Types.ObjectId(userId)
     });
-    if (!playlist || playlist.length === 0) {
+    if (!playlist) {
         throw new ApiError(
             404,
             "Playlist not found or has not been created yet"
@@ -61,9 +58,6 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     const playlist = await Playlist.findById(playlistId);
     if (!playlist) {
         throw new ApiError(404, "Playlist Not Found");
-    }
-    if (playlist.owner.toString() !== req.user?._id.toString()) {
-        throw new ApiError(403, "You are not owner of this playlist.");
     }
     return res
         .status(200)
@@ -94,7 +88,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
     if (playlist.owner.toString() !== req.user?._id.toString()) {
         throw new ApiError(403, "You are not owner of this playlist.");
     }
-    await Playlist.findByIdAndDelete(playlistId);
+    await Playlist.deleteOne();
 
     return res
         .status(200)
@@ -123,7 +117,7 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     }
     playlist.name = name;
     playlist.description = description;
-    const newPlaylist = await playlist.save({ new: true });
+    const newPlaylist = await playlist.save();
     if (!newPlaylist) {
         throw new ApiError(400, "Error while saving data on db.");
     }
