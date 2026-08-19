@@ -129,31 +129,32 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     const user = req.user;
-    if (!videoId) {
+    if (!videoId || !mongoose.isValidObjectId(videoId)) {
         throw new ApiError(400, "Video Id is required.");
     }
-    const video = await Video.findByIdAndUpdate(
-        videoId,
-        { $inc: { views: 1 } },
-        { new: true }
-    ).populate("owner", "username fullName avatar");
+    const video = await Video.findById(videoId).populate("owner", "username fullName avatar");
     if (!video) {
         throw new ApiError(404, "Video not Found.");
     }
-    if (video.isPublished === false) {
-        throw new ApiError(404, "Video is not Found or not published yet.");
+    const isOwner = user && video.owner._id.toString() === user._id.toString();
+    if (!video.isPublished && !isOwner) {
+        throw new ApiError(403, "Video is not published yet.");
     }
-    const updatedUser = await User.findByIdAndUpdate(
-        user?._id,
-        {
-            $addToSet: {
-                watchHistory: videoId,
-            },
-        },
-        { new: true }
-    );
-    if (!updatedUser) {
-        throw new ApiError(400, "Error while updating watch history.");
+    if (!isOwner) {
+        await Video.findByIdAndUpdate(videoId, {
+            $inc: { views: 1 }
+        });
+        video.views += 1; 
+    }
+    if (user) {
+        await User.findByIdAndUpdate(
+            user._id,
+            {
+                $addToSet: {
+                    watchHistory: videoId,
+                },
+            }
+        );
     }
     return res
         .status(200)
