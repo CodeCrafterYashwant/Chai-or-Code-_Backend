@@ -136,7 +136,6 @@ const deletePlaylist = asyncHandler(async (req, res) => {
 const updatePlaylist = asyncHandler(async (req, res) => {
     const { playlistId } = req.params;
     const { name, description } = req.body;
-    //TODO: update playlist
     if (!playlistId || !isValidObjectId(playlistId)) {
         throw new ApiError(400, "Plalist ID is required");
     }
