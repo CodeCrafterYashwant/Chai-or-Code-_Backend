@@ -132,7 +132,10 @@ const getVideoById = asyncHandler(async (req, res) => {
     if (!videoId || !mongoose.isValidObjectId(videoId)) {
         throw new ApiError(400, "Video Id is required.");
     }
-    const video = await Video.findById(videoId).populate("owner", "username fullName avatar");
+    const video = await Video.findById(videoId).populate(
+        "owner",
+        "username fullName avatar"
+    );
     if (!video) {
         throw new ApiError(404, "Video not Found.");
     }
@@ -142,19 +145,16 @@ const getVideoById = asyncHandler(async (req, res) => {
     }
     if (!isOwner) {
         await Video.findByIdAndUpdate(videoId, {
-            $inc: { views: 1 }
+            $inc: { views: 1 },
         });
-        video.views += 1; 
+        video.views += 1;
     }
     if (user) {
-        await User.findByIdAndUpdate(
-            user._id,
-            {
-                $addToSet: {
-                    watchHistory: videoId,
-                },
-            }
-        );
+        await User.findByIdAndUpdate(user._id, {
+            $addToSet: {
+                watchHistory: videoId,
+            },
+        });
     }
     return res
         .status(200)
