@@ -135,7 +135,6 @@ const deleteComment = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(
                 200,
-                deletedComment,
                 "Comment deleted Successfully."
             )
         );
